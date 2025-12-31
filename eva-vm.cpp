@@ -1,5 +1,7 @@
 #include <iostream>
 #include "src/vm/EvalVM.h"
+#include "src/Logger.h"
+
 
 /**
  * Eva VM main executable
@@ -8,12 +10,13 @@
  int main (int argc, char const *argv[]){
     EvaVM vm;
 
-    vm.exec(R"(
+   auto result =  vm.exec(R"(
 
         42
 
         )");
 
+    log(AS_NUMBER(result))
     std::cout << "All done\n";
 
     return 0;
