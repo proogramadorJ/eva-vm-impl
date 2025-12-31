@@ -36,8 +36,8 @@
  */
 #define BINARY_OP(op) \
     do {\
-        auto op1 = AS_NUMBER(pop()); \
         auto op2 = AS_NUMBER(pop()); \
+        auto op1 = AS_NUMBER(pop()); \
         push(NUMBER(op1 op op2)); \
     } while(false)
 
@@ -79,10 +79,10 @@
 
         //2. Compile program to Eva Bytecode
         // code = compiler->compile(ast);
-        code = {OP_CONST, 0, OP_CONST, 1, OP_ADD, OP_CONST, 2, OP_ADD, OP_HALT};
+        code = {OP_CONST, 0, OP_CONST, 1, OP_DIV, OP_HALT, 2, OP_ADD, OP_HALT};
         
-        constants.push_back(NUMBER(2));
-        constants.push_back(NUMBER(3));
+        constants.push_back(NUMBER(10));
+        constants.push_back(NUMBER(5));
         constants.push_back(NUMBER(5));
 
         // Set instruction pointer to the beginning
@@ -125,7 +125,7 @@
                     break;   
                 }  
                 case OP_MUL:{
-                    BINARY_OP(-);
+                    BINARY_OP(*);
                     break;   
                 }              
                 default:
