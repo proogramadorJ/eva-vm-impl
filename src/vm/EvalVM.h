@@ -10,10 +10,15 @@
 #include <vector>
 #include <cstdint>
 #include <array>
+#include<iostream>
+#include<memory>
 
 #include "../bytecode/OpCode.h"
 #include "../Logger.h"
 #include "./EvaValue.h"
+#include "../parser/EvaParser.h"
+
+using syntax::EvaParser;
 
 /**
  * Reads the current byte in the bytecode
@@ -45,7 +50,7 @@
  class EvaVM {
 
     public:
-        EvaVM(){}
+        EvaVM() : parser(std::make_unique<EvaParser>()) {}
 
 
  /**
@@ -75,17 +80,19 @@
   */
     EvaValue exec(const std::string &program){
         //1. parse the program
-        //auto ast = parser->parse(program);
+        auto ast = parser->parse("10");
+        log(ast.number);
 
         //2. Compile program to Eva Bytecode
         // code = compiler->compile(ast);
-        code = {OP_CONST, 0,OP_CONST, 1, OP_ADD, OP_HALT};
-        
+      //  code = {OP_CONST, 0,OP_CONST, 1, OP_ADD, OP_HALT};
+      code = compiler->compile(ast);
+
         //constants.push_back(NUMBER(10));
         //constants.push_back(NUMBER(5));
        // constants.push_back(NUMBER(5));
-       constants.push_back(ALLOC_STRING("Hello "));
-       constants.push_back(ALLOC_STRING("World"));
+       //constants.push_back(ALLOC_STRING("Hello "));
+       //constants.push_back(ALLOC_STRING("World"));
 
         // Set instruction pointer to the beginning
         ip = &code[0];
@@ -150,6 +157,11 @@
             }
         }
     }
+
+    /**
+     * Parser
+     */
+    std::unique_ptr<EvaParser> parser;
 
     /**
      *  Instruction point(aka Program counter).
