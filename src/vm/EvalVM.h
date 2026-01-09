@@ -17,6 +17,7 @@
 #include "../Logger.h"
 #include "./EvaValue.h"
 #include "../parser/EvaParser.h"
+#include "../compiler/EvaCompiler.h"
 
 using syntax::EvaParser;
 
@@ -50,7 +51,8 @@ using syntax::EvaParser;
  class EvaVM {
 
     public:
-        EvaVM() : parser(std::make_unique<EvaParser>()) {}
+        EvaVM() : parser(std::make_unique<EvaParser>()),
+                  compiler(std::make_unique<EvaCompiler>()) {}
 
 
  /**
@@ -162,6 +164,11 @@ using syntax::EvaParser;
      * Parser
      */
     std::unique_ptr<EvaParser> parser;
+
+    /**
+     * Compiler
+     */
+    std::unique_ptr<EvaCompiler> compiler;
 
     /**
      *  Instruction point(aka Program counter).

@@ -13,6 +13,7 @@ enum class EvaValueType{
 
 enum class ObjectType{
     STRING,
+    CODE
 };
 
 struct Object{
@@ -25,6 +26,26 @@ struct StringObject : public Object{
         : Object(ObjectType::STRING), string(str){}
     std::string string;
 };
+
+struct CodeObject: public Object{
+    /**
+     * Name of the unit(usually function name)
+     */
+    std::string name;
+
+      /**
+     * Constant pool
+     */
+    std::vector<EvaValue> constants;
+
+    /**
+     * Bytecode.
+     */
+
+     std::vector<uint8_t>code;
+     
+
+}
 
 /**
  *Eva value(tagged union).
