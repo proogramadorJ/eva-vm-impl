@@ -7,17 +7,17 @@
  * Eva VM main executable
  */
 
- int main (int argc, char const *argv[]){
+int main(int argc, char const *argv[]) {
     EvaVM vm;
 
-   auto result =  vm.exec(R"(
+    auto result = vm.exec(R"(
 
-        42
+       3
 
         )");
 
-    log(AS_CPPSTRING(result))
+    log(AS_NUMBER(result))
     std::cout << "All done\n";
 
     return 0;
- }
+}

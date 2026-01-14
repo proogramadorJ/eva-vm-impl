@@ -2,8 +2,8 @@
  * Eva Virtual Machine
  */
 
- #ifndef EvaVM_h
- #define EvaVM_h
+#ifndef EvaVM_h
+#define EvaVM_h
 
 
 #include <string>
@@ -30,7 +30,7 @@ using syntax::EvaParser;
 /**
  * Gets a constant from the pool.
  */
-#define GET_CONST() constants[READ_BYTE()]
+#define GET_CONST() co->constants[READ_BYTE()]
 
 /*
 * Stack top(stack overflow after exceeding).
@@ -48,56 +48,52 @@ using syntax::EvaParser;
     } while(false)
 
 
- class EvaVM {
-
-    public:
-        EvaVM() : parser(std::make_unique<EvaParser>()),
-                  compiler(std::make_unique<EvaCompiler>()) {}
-
-
- /**
-  * Pushes a value into the stack
-  */
- void push(const EvaValue& value){
-   if((size_t) (sp - stack.begin()) == STACK_LIMIT){
-        DIE << "push(): Stack overflow.\n"; 
-   }
-    *sp = value;
-    sp++;
- }
-
- /**
-  * Pops a value from the stack
-  */
- EvaValue pop(){
-    if(stack.size() == 0){
-        DIE << "pop(): empty stack.\n";
+class EvaVM {
+public:
+    EvaVM() : parser(std::make_unique<EvaParser>()),
+              compiler(std::make_unique<EvaCompiler>()) {
     }
-    --sp;
-    return *sp;
- }
 
-  /**
-  * Execute a program.
-  */
-    EvaValue exec(const std::string &program){
+
+    /**
+     * Pushes a value into the stack
+     */
+    void push(const EvaValue &value) {
+        if ((size_t) (sp - stack.begin()) == STACK_LIMIT) {
+            DIE << "push(): Stack overflow.\n";
+        }
+        *sp = value;
+        sp++;
+    }
+
+    /**
+     * Pops a value from the stack
+     */
+    EvaValue pop() {
+        if (stack.size() == 0) {
+            DIE << "pop(): empty stack.\n";
+        }
+        --sp;
+        return *sp;
+    }
+
+    /**
+    * Execute a program.
+    */
+    EvaValue exec(const std::string &program) {
         //1. parse the program
-        auto ast = parser->parse("10");
-        log(ast.number);
+        const auto ast = parser->parse(program);
+        //log(ast.number);
 
         //2. Compile program to Eva Bytecode
         // code = compiler->compile(ast);
-      //  code = {OP_CONST, 0,OP_CONST, 1, OP_ADD, OP_HALT};
-      code = compiler->compile(ast);
+        //  code = {OP_CONST, 0,OP_CONST, 1, OP_ADD, OP_HALT};
+        //  code = compiler->compile(ast);
+        co = compiler->compile(ast);
 
-        //constants.push_back(NUMBER(10));
-        //constants.push_back(NUMBER(5));
-       // constants.push_back(NUMBER(5));
-       //constants.push_back(ALLOC_STRING("Hello "));
-       //constants.push_back(ALLOC_STRING("World"));
 
         // Set instruction pointer to the beginning
-        ip = &code[0];
+        ip = &co->code[0];
 
         //Set the stack pointer to the beginning
         sp = &stack[0];
@@ -108,54 +104,54 @@ using syntax::EvaParser;
     /**
      * Main evaluation loop
      */
-    EvaValue eval(){
-        for(;;){
+    EvaValue eval() {
+        for (;;) {
             auto opcode = READ_BYTE();
             log_hex(opcode);
 
-            switch (opcode){
+            switch (opcode) {
                 case OP_HALT:
                     return pop();
 
                 //Constants
                 case OP_CONST:
                     push(GET_CONST());
-                    break; 
+                    break;
 
-                //Math operations                    
-                case OP_ADD:{
-                    auto op2 = pop(); 
-                    auto op1 = pop();   
+                //Math operations
+                case OP_ADD: {
+                    auto op2 = pop();
+                    auto op1 = pop();
 
-                    // Numeric addition              
-                    if(IS_NUMBER(op1) && IS_NUMBER(op2)){   
+                    // Numeric addition
+                    if (IS_NUMBER(op1) && IS_NUMBER(op2)) {
                         auto v1 = AS_NUMBER(op1);
-                        auto v2 = AS_NUMBER(op2);                     
+                        auto v2 = AS_NUMBER(op2);
                         push(NUMBER(v1 + v2));
                     }
 
                     //String concatenation
-                   else if(IS_STRING(op1) && IS_STRING(op2)){
+                    else if (IS_STRING(op1) && IS_STRING(op2)) {
                         auto s1 = AS_CPPSTRING(op1);
                         auto s2 = AS_CPPSTRING(op2);
                         push(ALLOC_STRING(s1 + s2));
-                   }
-                    break;   
+                    }
+                    break;
                 }
-                case OP_SUB:{
+                case OP_SUB: {
                     BINARY_OP(-);
-                    break;   
+                    break;
                 }
-                case OP_DIV:{
+                case OP_DIV: {
                     BINARY_OP(/);
-                    break;   
-                }  
-                case OP_MUL:{
+                    break;
+                }
+                case OP_MUL: {
                     BINARY_OP(*);
-                    break;   
-                }              
+                    break;
+                }
                 default:
-                    DIE << "Unknown opcode: " << std::showbase << std::hex << (int)opcode;
+                    DIE << "Unknown opcode: " << std::showbase << std::hex << (int) opcode;
             }
         }
     }
@@ -173,31 +169,31 @@ using syntax::EvaParser;
     /**
      *  Instruction point(aka Program counter).
      */
-    uint8_t* ip;
+    uint8_t *ip;
 
     /**
      * Stack pointer.
      */
-    EvaValue* sp;
+    EvaValue *sp;
 
     /**
      * Operands stack;
      */
     std::array<EvaValue, STACK_LIMIT> stack;
 
-    /**
-     * Constant pool
-     */
-    std::vector<EvaValue> constants;
+    // /**
+    //  * Constant pool
+    //  */
+    // std::vector<EvaValue> constants;
+    //
+    //
+    // /**
+    //  * Bytecode.
+    //  */
+    //
+    // std::vector<uint8_t> code;
 
-
-    /**
-     * Bytecode.
-     */
-
-     std::vector<uint8_t>code;
-     
-    
- };
+    CodeObject *co;
+};
 
 #endif
