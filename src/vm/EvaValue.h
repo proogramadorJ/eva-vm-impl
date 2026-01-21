@@ -88,4 +88,41 @@ struct CodeObject : public Object {
 #define IS_OBJECT_TYPE(evaValue, objectType) \
     (IS_OBJECT(evaValue) && AS_OBJECT(evaValue)->type == objectType)
 
+//String representation used in constants for debug.
+std::string evaValueToTypeString(const EvaValue &evaValue) {
+    if (IS_NUMBER(evaValue)) {
+        return "NUMBER";
+    }
+    if (IS_STRING(evaValue)) {
+        return "STRING";
+    }
+    if (IS_CODE(evaValue)) {
+        return "CODE";
+    }
+    DIE << "evaValueToTypeString: unknow type " << (int)evaValue.type;
+    return "";
+}
+
+//String representation used in constants for debug.
+std::string evaValueToConstantString(const EvaValue &evaValue) {
+    std::stringstream ss;
+    if (IS_NUMBER(evaValue)) {
+        ss << evaValue.number;
+    }else if (IS_STRING(evaValue)) {
+        ss << '"' << AS_CPPSTRING(evaValue) << '"';
+    }else if (IS_CODE(evaValue)) {
+        auto code = AS_CODE(evaValue);
+        ss << "code " << code << ": " << code->name;
+    }else {
+        DIE << "evaValueToConstantString: unknow type " << (int)evaValue.type;
+    }
+    return ss.str();
+}
+
+// Output stream
+std::ostream &operator<<(std::ostream &os, const EvaValue &evaValue) {
+    return os << "EvaValue(" << evaValueToTypeString(evaValue)
+                << "): " << evaValueToConstantString(evaValue);
+}
+
 #endif
