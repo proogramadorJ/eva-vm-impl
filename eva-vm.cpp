@@ -12,7 +12,7 @@ int main(int argc, char const *argv[]) {
 
     auto result = vm.exec(R"(
 
-      (+ "hello" " world")
+      (!= 5 5)
 
         )");
 
