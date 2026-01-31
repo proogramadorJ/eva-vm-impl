@@ -5,6 +5,8 @@
 #include <map>
 #include <string>
 
+#include "../disassembler/EvaDisassembler.h"
+
 #define ALLOC_CONST(tester, converter, allocator, value) \
     do{ \
         for (size_t i = 0; i < co->constants.size(); i++) { \
@@ -89,13 +91,65 @@ public:
                         emit(OP_COMPARE);
                         emit(compareOps_[op]);
                     }
+
+                    //Branch instruction
+                    /**
+                     * (if <test> <consequent> <alternate>)
+                     */
+                    if (op == "if") {
+                        //Emit <test>
+                        gen(exp.list[1]);
+                        emit(OP_JMP_IF_FALSE);
+
+                        //Else branch. Init with 0 adress, will be patched.
+                        emit(0);
+                        emit(0);
+
+                        auto elseJmpAddr = getOffset() - 2;
+
+                        //Emit <consequent>
+                        gen(exp.list[2]);
+                        emit(OP_JMP);
+
+                        //2-byte adress:
+                        emit(0);
+                        emit(0);
+
+                        auto endAddr = getOffset() - 2;
+
+                        //patch the else branch adress.
+                        auto elseBranchAddr = getOffset();
+                        patchJumpAdress(elseJmpAddr, elseBranchAddr);
+
+                        //Emit <alternate> if we have it.
+                        if (exp.list.size() == 4) {
+                            gen(exp.list[3]);
+                        }
+
+                        //Patch the end.
+                        auto endBranchAddr = getOffset();
+                        patchJumpAdress(endAddr, endBranchAddr);
+                    }
                 }
                 break;
 
         }
     }
 
+    //Disassemble all complication units.
+    void disassemblerByteCode() {
+        disassembler->disassemble(co);
+    }
+
 private:
+    //Disassembler
+    std::unique_ptr<EvaDisassembler> disassembler;
+
+    /**
+     *  Returns current bytedo offset
+    **/
+    size_t getOffset() {return co->code.size();}
+
     /**
      *Allocates a numeric constant.
      */
@@ -124,6 +178,17 @@ private:
      *Emits data to the bytecode
      */
     void emit(uint8_t code) { co->code.push_back(code); }
+
+    //Writes byte at offset
+    void writeByteAtOffset(size_t offset, uint8_t value) {
+        co->code[offset] = value;
+    }
+
+    //Patches jump adress.
+    void patchJumpAdress(size_t offset, uint16_t value) {
+        writeByteAtOffset(offset, (value >> 8) & 0xff);
+        writeByteAtOffset(offset + 1, value & 0xff);
+    }
 
     //Compare ops map.
     static std::map<std::string, uint8_t> compareOps_;

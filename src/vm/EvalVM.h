@@ -27,10 +27,15 @@ using syntax::EvaParser;
  */
 #define READ_BYTE() *ip++
 
+//Reads a short word (2 bytes)
+#define READ_SHORT() (ip +=2, (uint16_t)((ip[-2] << 8) | ip[-1]))
+
+//Coverts bytecode inde to a pointer
+#define TO_ADRESS(index) (&co->code[index])
 /**
  * Gets a constant from the pool.
  */
-#define GET_CONST() co->constants[READ_BYTE()]
+#define GET_CONST() (co->constants[READ_BYTE()])
 
 /*
 * Stack top(stack overflow after exceeding).
@@ -123,6 +128,9 @@ public:
         //Set the stack pointer to the beginning
         sp = &stack[0];
 
+        //Debug disassembly
+        compiler->disassemblerByteCode();
+
         return eval();
     }
 
@@ -132,7 +140,7 @@ public:
     EvaValue eval() {
         for (;;) {
             auto opcode = READ_BYTE();
-            log_hex(opcode);
+            //log_hex(opcode);
 
             switch (opcode) {
                 case OP_HALT:
@@ -195,6 +203,24 @@ public:
 
                     break;
                 }
+                //Conditional Jump
+                case OP_JMP_IF_FALSE: {
+                    auto cond = AS_BOOLEAN(pop());
+
+                    auto adress = READ_SHORT();
+                    if (!cond) {
+                        ip = TO_ADRESS(adress);
+                    }
+                    break;
+                }
+
+                 //Unconditional jump
+                case OP_JMP: {
+                    ip = TO_ADRESS(READ_SHORT());
+                    break;
+                }
+
+
                 default:
                     DIE << "Unknown opcode: " << std::showbase << std::hex << (int) opcode;
             }

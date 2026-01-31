@@ -1,6 +1,8 @@
 #ifndef _OpCode_h
 #define _OpCode_h
 
+#include "../Logger.h"
+
 // Stops the program
 #define OP_HALT 0x00
 
@@ -12,5 +14,39 @@
 #define OP_SUB 0x03
 #define OP_DIV 0x04
 #define OP_MUL 0x05
+
+//Coparison
 #define OP_COMPARE 0x06
+
+//Control flow: jump if the value on the stack if false
+#define OP_JMP_IF_FALSE 0x07
+
+//Unconditional jump.
+#define OP_JMP 0x08
+
+//-------------------------------------------------------------
+
+#define OP_STR(op) \
+    case OP_##op:   \
+        return #op
+
+std::string opcodeToString(uint8_t opcode) {
+    switch (opcode) {
+        OP_STR(HALT);
+        OP_STR(CONST);
+        OP_STR(ADD);
+        OP_STR(SUB);
+        OP_STR(MUL);
+        OP_STR(DIV);
+        OP_STR(COMPARE);
+        OP_STR(JMP);
+        OP_STR(JMP_IF_FALSE);
+        default:
+            DIE << "opcodeToString: unknow opcode: " << (int)opcode;
+    }
+}
+
+
+
+
 #endif
