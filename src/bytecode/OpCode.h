@@ -24,6 +24,12 @@
 //Unconditional jump.
 #define OP_JMP 0x08
 
+//Returns global variable
+#define OP_GET_GLOBAL 0x09
+
+//Sets global variable
+#define OP_SET_GLOBAL 0x10
+
 //-------------------------------------------------------------
 
 #define OP_STR(op) \
@@ -41,6 +47,8 @@ std::string opcodeToString(uint8_t opcode) {
         OP_STR(COMPARE);
         OP_STR(JMP);
         OP_STR(JMP_IF_FALSE);
+        OP_STR(GET_GLOBAL);
+        OP_STR(SET_GLOBAL);
         default:
             DIE << "opcodeToString: unknow opcode: " << (int)opcode;
     }

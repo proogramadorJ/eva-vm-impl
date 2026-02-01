@@ -29,8 +29,10 @@
 
 class EvaCompiler {
 public:
-    EvaCompiler() {
+    EvaCompiler(std::shared_ptr<Global> global)
+        : global(global), disassembler(std::make_unique<EvaDisassembler>(global)) {
     }
+
 
     CodeObject *co;
 
@@ -63,8 +65,13 @@ public:
                 if (exp.string == "true" || exp.string == "false") {
                     emit(OP_CONST);
                     emit(booleanConstIdx(exp.string == "true" ? true : false));
-                }else {
-                    //Variables TODO
+                } else {
+                    //Variables
+                    if (!global->exists(exp.string)) {
+                        DIE << "[EvaCompiler]: Reference error: " << exp.string;
+                    }
+                    emit(OP_GET_GLOBAL);
+                    emit(global->getGlobalIndex(exp.string));
                 }
                 break;
             case ExpType::LIST:
@@ -77,11 +84,11 @@ public:
                     //Binary math operations
                     if (op == "+") {
                         GEN_BINARY_OP(OP_ADD);
-                    }else if (op == "-") {
+                    } else if (op == "-") {
                         GEN_BINARY_OP(OP_SUB);
-                    }else if (op == "*") {
+                    } else if (op == "*") {
                         GEN_BINARY_OP(OP_MUL);
-                    }else if (op == "/") {
+                    } else if (op == "/") {
                         GEN_BINARY_OP(OP_DIV);
                     }
                     // Compare oparations like (> 5 10).
@@ -132,7 +139,6 @@ public:
                     }
                 }
                 break;
-
         }
     }
 
@@ -148,7 +154,7 @@ private:
     /**
      *  Returns current bytedo offset
     **/
-    size_t getOffset() {return co->code.size();}
+    size_t getOffset() { return co->code.size(); }
 
     /**
      *Allocates a numeric constant.
@@ -158,13 +164,13 @@ private:
         return co->constants.size() - 1;
     }
 
-     /**
-         *Allocates a boolean constant.
-         */
-        size_t booleanConstIdx(bool value) {
-            ALLOC_CONST(IS_BOOLEAN, AS_BOOLEAN, BOOLEAN, value);
-            return co->constants.size() - 1;
-        }
+    /**
+        *Allocates a boolean constant.
+        */
+    size_t booleanConstIdx(bool value) {
+        ALLOC_CONST(IS_BOOLEAN, AS_BOOLEAN, BOOLEAN, value);
+        return co->constants.size() - 1;
+    }
 
     /**
      *Allocates a string constant.
@@ -192,11 +198,16 @@ private:
 
     //Compare ops map.
     static std::map<std::string, uint8_t> compareOps_;
+
+    /**
+ * Global object
+ */
+    std::shared_ptr<Global> global;
 };
 
 //Compare ops map.
-std::map<std::string, uint8_t>EvaCompiler::compareOps_ = {
-    {"<",0},{">", 1},{"==",2},{">=", 3},{"<=",4},{"!=", 5}
+std::map<std::string, uint8_t> EvaCompiler::compareOps_ = {
+    {"<", 0}, {">", 1}, {"==", 2}, {">=", 3}, {"<=", 4}, {"!=", 5}
 };
 
 #endif

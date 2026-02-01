@@ -16,6 +16,7 @@
 #include "../bytecode/OpCode.h"
 #include "../Logger.h"
 #include "./EvaValue.h"
+#include "Global.h"
 #include "../parser/EvaParser.h"
 #include "../compiler/EvaCompiler.h"
 
@@ -81,7 +82,9 @@ using syntax::EvaParser;
 class EvaVM {
 public:
     EvaVM() : parser(std::make_unique<EvaParser>()),
-              compiler(std::make_unique<EvaCompiler>()) {
+              global(std::make_shared<Global>()),
+              compiler(std::make_unique<EvaCompiler>(global)) {
+        setGloblaVariables();
     }
 
 
@@ -220,6 +223,16 @@ public:
                     break;
                 }
 
+                case OP_GET_GLOBAL: {
+                    auto globalIndex = READ_BYTE();
+                    push(global->get(globalIndex).value);
+                    break;
+                }
+                case OP_SET_GLOBAL: {
+
+                    break;
+                }
+
 
                 default:
                     DIE << "Unknown opcode: " << std::showbase << std::hex << (int) opcode;
@@ -227,10 +240,21 @@ public:
         }
     }
 
+    //Set up global variables and functions.
+    void setGloblaVariables(){
+        global->addConst("x", 10);
+        global->addConst("y", 20);
+    }
+
     /**
      * Parser
      */
     std::unique_ptr<EvaParser> parser;
+
+    /**
+    * Global object
+    */
+    std::shared_ptr<Global> global;
 
     /**
      * Compiler
