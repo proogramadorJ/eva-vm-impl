@@ -137,6 +137,37 @@ public:
                         auto endBranchAddr = getOffset();
                         patchJumpAdress(endAddr, endBranchAddr);
                     }
+
+                    else if (op == "var") {
+                        //1 Global vars
+                        auto varName = exp.list[1].string;
+                        global->define(varName);
+
+                        //Initializer
+                        gen(exp.list[2]);
+
+                        emit(OP_SET_GLOBAL);
+                        emit(global->getGlobalIndex(varName));
+
+                        //Local var TODO
+                    }
+
+                    else if (op == "set") {
+                        auto varName = exp.list[1].string;
+
+                        //initilizer
+                        gen(exp.list[2]);
+
+                        auto globalIndex = global->getGlobalIndex(varName);
+                        if (globalIndex ==  -1) {
+                            DIE << "Reference erro: "<<varName << " is not defined.";
+                        }
+
+                        emit(OP_SET_GLOBAL);
+                        emit(globalIndex);
+
+
+                    }
                 }
                 break;
         }
